@@ -1,5 +1,4 @@
-import errorMiddleWareModule from "./error.middleware";
+import * as errorMiddleWareModule from "./error.middleware.js";
  
-export default errorHandler = {
-    errorMiddleWareModule, 
-};
+export   {errorMiddleWareModule}
+ 

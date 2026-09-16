@@ -1,13 +1,14 @@
-const { ZodError } = require("zod");
-const logger = require("../logger");
-const {fromZodError} = require("zod-validation-error");
-const { mongoose } = require("mongoose");
-const { JsonWebTokenError } = require("jsonwebtoken");
-const { AxiosError }  = require("axios");
+import { ZodError } from "zod";
+import logger from "../logger/index.js";
+import {fromZodError} from "zod-validation-error";
+import  mongoose  from "mongoose";
+import  JsonWebTokenError  from "jsonwebtoken";
+import { AxiosError }  from "axios";
 
 
 
 export const errorHandler = (err, _req, res, _next) => {
+ 
   logger.error(err,{service:"error"});
   if(err instanceof ZodError){
     const validationError = fromZodError(err);
