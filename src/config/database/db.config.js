@@ -1,9 +1,9 @@
 import { mongoose, connect } from "mongoose";
-const logger = import("../../logger");
-const config = import("../env");  
+import logger  from "../../logger";
+import config from "../env";  
 
  
-export const MongoDB = async () => {
+ const MongoDB = async () => {
   try {
     // mongoose.set("strictQuery", true);
     logger.info("Connecting to Database...", { service: "database" });
@@ -14,3 +14,4 @@ export const MongoDB = async () => {
     process.exit(-1);
   }
 };
+export default MongoDB;
