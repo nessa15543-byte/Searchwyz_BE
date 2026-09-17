@@ -3,10 +3,7 @@ import { error } from "console"
 
 export const register = (req, res) =>{
     try{
-        const {firstName} = req.body.firstName
-        const lastName = req.body.lastName
-        const email = req.body.email
-        const password = req.body.password
+        const { email, firstName, lastName, password} = req.body;
 
         if(!firstName) return res.status(400).json({error:"firstname is required"});
         if(firstName.length < 3) return res.status(400).json({error:"firstname must not be less than 3 characters"});
