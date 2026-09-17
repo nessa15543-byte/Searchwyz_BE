@@ -1,16 +1,12 @@
-const express = require("express");
-const dotenv = require("dotenv");
-const cors = require("cors");
-const logger = require("./logger");
-const { CONFIG, CORS_WHITELISTS } = require("./config");
-const { errorHandler } = require("./middlewares/error.middleware");
-const expressWinston = require("express-winston"); 
-dotenv.config();
-
-const app = express();  
-app.set('trust proxy', 1);
- 
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import expressWinston from "express-winston"; 
+import logger from "./src/logger/index.js"; // Or "./logger.js" depending on your setup
+import { CONFIG, CORS_WHITELISTS } from "./src/config/index.js"; // Or "./config.js" 
+import { errorHandler } from "./src/middleware/error.middleware.js";
   
+const app = express();   
 app.use(
   cors({
     origin: function (origin, cb) {
@@ -26,11 +22,10 @@ app.use(
   })
 );
 app.use(expressWinston.logger(logger));
-// app.disable("etag");
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ limit: "5mb", extended: true }));
 app.use("/api/v1/status", (_req, res) => {
   res.send({ msg: `Yes!... Welcome to ${CONFIG.APP_NAME} API` });
 });
 app.use(errorHandler);
-module.exports = app;
+export  {app};

@@ -1,6 +1,6 @@
-const { createLogger, format, transports } = require("winston");
-const config = require("../config/env");
-require("winston-mongodb");
+import { createLogger, format, transports }  from "winston";
+import config  from "../config/env.js";
+import("winston-mongodb");
 const { combine, timestamp, errors, json, metadata } = format;
 
 const cleanMongoUrl = (value) => {
