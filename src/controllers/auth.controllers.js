@@ -37,10 +37,10 @@ export const forgotPassword = (req,res) =>{
 
         if(!email) return res.status(400).json({error:"Invalid email address"})
         if(!email.includes("@")) return res.status(400).json({error:"Email is invalid"});
+        const user ={
+            email,
 
-
-
-
+        }
     }catch(error){
         res.status(400).json({error:error.message})
     }
