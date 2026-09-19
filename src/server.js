@@ -4,7 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 import { CONFIG, CORS_WHITELISTS } from "./config/index.js";
-import { connectDB } from "./config/db.js";
+import { connectDB } from "./config/db.js";      
 import { verifyEmailConnection } from "./config/email.js";
 import routes from "./routes/index.js";
 import logger from "./logger/index.js";
