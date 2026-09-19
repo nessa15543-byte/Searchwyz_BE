@@ -1,0 +1,24 @@
+Account
+    -_id                    -> ObjectId
+    - firstName             -> String
+    - lastName              -> String
+    - email                 -> String
+    - password              -> String
+    - phone                 -> String
+
+    -_id                    -> ObjectId
+    -_id                    -> caseId
+    - name                  -> String
+    - age                   -> String
+    - height                -> String
+    - lastSeen              -> Object
+    - photo                 -> Object
+    - complextion           -> String
+    - comment               -> Array
+    - status                -> Value
+
+    -_id                    -> ObjectId
+    -_id                    -> adminId
+    - email                 -> String
+    - password              -> String
+    
