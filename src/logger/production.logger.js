@@ -1,6 +1,7 @@
-import { createLogger, format, transports }  from "winston";
-import config  from "../config/env.js";
-import("winston-mongodb");
+import { createLogger, format, transports } from "winston";
+import "winston-mongodb";
+import { CONFIG } from "../config/index.js";
+
 const { combine, timestamp, errors, json, metadata } = format;
 
 const cleanMongoUrl = (value) => {
@@ -9,11 +10,12 @@ const cleanMongoUrl = (value) => {
 };
 
 export const proLogger = () => {
-  const dbUrl = config.ERROR_LOG_URL;
+  const dbUrl = cleanMongoUrl(CONFIG.ERROR_LOG_URL);
+
   const logger = createLogger({
     level: "info",
     exitOnError: false,
-    format: combine(json(), timestamp(), errors({ stack: true }), metadata()),
+    format: combine(timestamp(), errors({ stack: true }), metadata(), json()),
     transports: [],
   });
 
@@ -27,31 +29,34 @@ export const proLogger = () => {
     logger.add(
       new transports.MongoDB({
         level: "error",
-        collection: "searchwhyx_error_log",
-        db: dbUrl, 
+        collection: "searchwyz_error_log",
+        db: dbUrl,
       })
     );
     logger.add(
       new transports.MongoDB({
         level: "info",
-        collection: "searchwhyx_infor_log",
-        db: dbUrl, 
+        collection: "searchwyz_info_log",
+        db: dbUrl,
       })
     );
     logger.add(
       new transports.MongoDB({
         level: "debug",
-        collection: "searchwhyx_exception_log",
+        collection: "searchwyz_debug_log",
         db: dbUrl,
       })
     );
   } catch (error) {
     logger.add(new transports.Console());
-    logger.error("Failed to initialize MongoDB logger transport; falling back to console.", error);
+    logger.error(
+      "Failed to initialize MongoDB logger transport; falling back to console.",
+      error
+    );
   }
 
   logger.on("error", (err) => {
-    console.error("Logger transport error:", err);
+    console.error("Logger transport error:", err.message);
   });
 
   return logger;
