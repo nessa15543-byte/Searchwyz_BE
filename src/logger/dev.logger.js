@@ -1,20 +1,21 @@
-import { createLogger, format, transports } from 'winston';
-const { combine, timestamp, printf, errors, json} = format;
+import { createLogger, format, transports } from "winston";
 
-const myFormat = printf(({ level, message, service, timestamp , stack}) => {
-  return `${timestamp} [${level}] [${service || "response"}]  ${stack || message}`;
+const { combine, timestamp, printf, errors, json, colorize } = format;
+
+const myFormat = printf(({ level, message, service, timestamp, stack, ...meta }) => {
+  const rest = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : "";
+  return `${timestamp} [${level}] [${service || "response"}] ${stack || message}${rest}`;
 });
+
 export const devLogger = () => {
   return createLogger({
     level: "debug",
     format: combine(
-      json(),
-      format.colorize(),
+      colorize(),
       timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
       errors({ stack: true }),
       myFormat
     ),
-    // meta: { service },
     transports: [new transports.Console()],
   });
 };

@@ -2,11 +2,12 @@
   "name": "searchwyz_be",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
-  "main": "server.js",
+  "description": "This is an API server for SearchWyz (ADMIN AND users) Dashboard",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed:admin": "node src/scripts/seedAdmin.js"
   },
   "repository": {
     "type": "git",
@@ -19,18 +20,26 @@
     "url": "https://github.com/nessa15543-byte/Searchwyz_BE/issues"
   },
   "homepage": "https://github.com/nessa15543-byte/Searchwyz_BE#readme",
-  "devDependencies": {
-    "nodemon": "^3.1.14"
-  },
   "dependencies": {
-    "axios": "^1.20.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.0",
     "express": "^5.2.1",
-    "express-winston": "^4.2.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.1",
+    "morgan": "^1.12.1",
+    "multer": "^2.4.0",
+    "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^10.0.10",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0",
     "winston-mongodb": "^7.0.1",
-    "zod-validation-error": "^5.0.0"
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }
