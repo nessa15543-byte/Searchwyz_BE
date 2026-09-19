@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow tools like Bruno/Postman (no origin header)
+      // allow tools like Bruno/Postman (   no origin header)
       if (!origin) return callback(null, true);
 
       if (CORS_WHITELISTS.includes(origin)) {
