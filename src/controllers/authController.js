@@ -515,7 +515,6 @@ export const login = async (req, res) => {
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
           role: "admin",
-          dashboardRoute: "/admin/dashboard",
         },
       });
     }
@@ -559,7 +558,6 @@ export const login = async (req, res) => {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         role: "user",
-        dashboardRoute: "/user/dashboard",
       },
     });
   } catch (err) {

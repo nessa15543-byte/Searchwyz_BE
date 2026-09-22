@@ -39,14 +39,14 @@ app.use(
 app.use(helmet());
 app.use(morgan("dev"));
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.json({ message: `${CONFIG.APP_NAME}_BE running` });
 });
 
 app.use("/api", routes);
 
 // 404 — needs next even if unused, Express expects 3 args only if you want it
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).json({ success: false, message: "Route not found" });
 });
 

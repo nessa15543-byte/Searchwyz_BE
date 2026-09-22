@@ -9,11 +9,10 @@ const splitList = (value) =>
 
 export const CONFIG = {
   APP_NAME: process.env.APP_NAME || "SEARCHWYZ",
-  PORT: process.env.PORT || 5000,
+  PORT: process.env.PORT || 4000,
   NODE_ENV: process.env.NODE_ENV || "development",
 
   MONGO_URI: process.env.MONGO_URI,
-  ERROR_LOG_URL: process.env.ERROR_LOG_URL,
   LOG_LEVEL: process.env.LOG_LEVEL || "info",
 
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
