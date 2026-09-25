@@ -11,7 +11,7 @@ import {
 } from "../utils/generateToken.js";
 import { sendOtpEmail } from "../utils/sendEmail.js";
 import { CONFIG } from "../config/index.js";
-import { computeLocationRanking } from "../utils/ranking.js";
+import { APIError } from "../utils/APIError.js";
 
 // ---------- helpers ----------
 
@@ -46,7 +46,7 @@ const clearAuthCookies = (res) => {
 const saveRefreshToken = async (entity, refreshToken, req) => {
   const minutes = Number(CONFIG.REFRESH_TOKEN_EXPIRES_MINUTES);
   if (!Number.isFinite(minutes) || minutes <= 0) {
-    throw new Error("REFRESH_TOKEN_EXPIRES_MINUTES is not configured correctly");
+    throw APIError.internal("REFRESH_TOKEN_EXPIRES_MINUTES is not configured correctly");
   }
 
   const tokenHash = hashToken(refreshToken);
@@ -78,15 +78,13 @@ const hasActiveRefreshToken = (entity) => {
 
 // ---------- register ----------
 
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
     const { fullName, email, phone, password } = req.validated;
 
     const exists = await User.findOne({ email });
     if (exists) {
-      return res
-        .status(409)
-        .json({ success: false, message: "Email already registered" });
+      return next(APIError.conflict("Email already registered"));
     }
 
     await User.create({ fullName, email, phone, password });
@@ -96,19 +94,13 @@ export const register = async (req, res) => {
       message: "Registration successful",
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "register",
-      service: "auth",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- login ----------
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
   try {
     const { email, password } = req.validated;
 
@@ -120,11 +112,11 @@ export const login = async (req, res) => {
       pruneExpiredRefreshTokens(admin);
 
       if (hasActiveRefreshToken(admin)) {
-        return res.status(409).json({
-          success: false,
-          message:
-            "Admin already logged in. Log out first or wait for refresh to expire.",
-        });
+        return next(
+          APIError.conflict(
+            "Admin already logged in. Log out first or wait for refresh to expire."
+          )
+        );
       }
 
       const tokens = buildAuthPayload(admin, admin.role);
@@ -142,8 +134,8 @@ export const login = async (req, res) => {
         message: "Admin login successful",
         data: {
           role: "admin",
-           accessToken: tokens.accessToken,
-           refreshToken: tokens.refreshToken,
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
         },
       });
     }
@@ -153,25 +145,21 @@ export const login = async (req, res) => {
       "+password +refreshTokens"
     );
     if (!user || !(await user.matchPassword(password))) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid email or password" });
+      return next(APIError.unauthorized("Invalid email or password"));
     }
 
     if (user.accountStatus === "restricted") {
-      return res
-        .status(403)
-        .json({ success: false, message: "Account restricted" });
+      return next(APIError.forbidden("Account restricted"));
     }
 
     pruneExpiredRefreshTokens(user);
 
     if (hasActiveRefreshToken(user)) {
-      return res.status(409).json({
-        success: false,
-        message:
-          "User already logged in. Log out first or wait for refresh to expire.",
-      });
+      return next(
+        APIError.conflict(
+          "User already logged in. Log out first or wait for refresh to expire."
+        )
+      );
     }
 
     const tokens = buildAuthPayload(user, "user");
@@ -189,24 +177,18 @@ export const login = async (req, res) => {
       message: "Login successful",
       data: {
         role: "user",
-         accessToken: tokens.accessToken,
-         refreshToken: tokens.refreshToken,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
       },
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "login",
-      service: "auth",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- get me ----------
 
-export const getMe = async (req, res) => {
+export const getMe = async (req, res, next) => {
   try {
     if (req.role === "user") {
       return res.status(200).json({
@@ -236,45 +218,34 @@ export const getMe = async (req, res) => {
       });
     }
 
-    return res.status(403).json({ success: false, message: "Invalid role" });
+    return next(APIError.forbidden("Invalid role"));
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "getMe",
-      service: "auth",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- refresh ----------
 
-export const refresh = async (req, res) => {
+export const refresh = async (req, res, next) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Refresh token required" });
+      return next(APIError.unauthorized("Refresh token required"));
     }
 
     let decoded;
     try {
       decoded = verifyRefreshToken(refreshToken);
     } catch (err) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid or expired refresh token. Please log in again.",
-      });
+      return next(
+        APIError.unauthorized("Invalid or expired refresh token. Please log in again.")
+      );
     }
 
     const model = decoded.role === "user" ? User : Admin;
     const entity = await model.findById(decoded.id).select("+refreshTokens");
     if (!entity) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Account not found" });
+      return next(APIError.unauthorized("Account not found"));
     }
 
     const incomingHash = hashToken(refreshToken);
@@ -283,10 +254,11 @@ export const refresh = async (req, res) => {
     );
 
     if (!matched || matched.expiresAt < new Date()) {
-      return res.status(401).json({
-        success: false,
-        message: "Refresh token not recognized or expired. Please log in again.",
-      });
+      return next(
+        APIError.unauthorized(
+          "Refresh token not recognized or expired. Please log in again."
+        )
+      );
     }
 
     const newAccessToken = generateAccessToken({
@@ -297,25 +269,20 @@ export const refresh = async (req, res) => {
     const accessMinutes =
       Number(String(CONFIG.ACCESS_TOKEN_EXPIRES_IN).replace("m", "")) || 2;
     res.cookie("accessToken", newAccessToken, cookieOptions(accessMinutes));
-return res.status(200).json({
-  success: true,
-  message: "Token refreshed",
-  data: { accessToken: newAccessToken },
-});
-  } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "refresh",
-      service: "auth",
+
+    return res.status(200).json({
+      success: true,
+      message: "Token refreshed",
+      data: { accessToken: newAccessToken },
     });
-    return res.status(500).json({ success: false, message: err.message });
+  } catch (err) {
+    return next(err);
   }
 };
 
 // ---------- logout (this session) ----------
 
-export const logout = async (req, res) => {
+export const logout = async (req, res, next) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
 
@@ -345,19 +312,13 @@ export const logout = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Logged out successfully" });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "logout",
-      service: "auth",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- logout all devices ----------
 
-export const logoutAll = async (req, res) => {
+export const logoutAll = async (req, res, next) => {
   try {
     const model = req.role === "user" ? User : Admin;
     const entity = await model
@@ -376,19 +337,13 @@ export const logoutAll = async (req, res) => {
       message: "Logged out from all devices",
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "logoutAll",
-      service: "auth",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- forgot password ----------
 
-export const forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.validated;
 
@@ -410,20 +365,17 @@ export const forgotPassword = async (req, res) => {
         const wait = Math.ceil(
           CONFIG.OTP_RESEND_COOLDOWN_SECONDS - secondsSince
         );
-        return res.status(429).json({
-          success: false,
-          message: `Please wait ${wait}s before requesting a new OTP.`,
-          retryAfterSeconds: wait,
-        });
+        return next(
+          APIError.tooMany(`Please wait ${wait}s before requesting a new OTP.`)
+        );
       }
     }
 
     const otpMinutes = Number(CONFIG.OTP_EXPIRES_MINUTES);
     if (!Number.isFinite(otpMinutes) || otpMinutes <= 0) {
-      return res.status(500).json({
-        success: false,
-        message: "OTP_EXPIRES_MINUTES is not configured correctly",
-      });
+      return next(
+        APIError.internal("OTP_EXPIRES_MINUTES is not configured correctly")
+      );
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -440,24 +392,15 @@ export const forgotPassword = async (req, res) => {
       service: "auth",
     });
 
-    if (CONFIG.NODE_ENV === "development" || CONFIG.NODE_ENV === "dev") {
-      return res.status(200).json({ ...genericResponse, devOtp: otp });
-    }
     return res.status(200).json(genericResponse);
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "forgotPassword",
-      service: "auth",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- verify OTP ----------
 
-export const verifyOtp = async (req, res) => {
+export const verifyOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.validated;
 
@@ -465,22 +408,16 @@ export const verifyOtp = async (req, res) => {
       "+otpHash +otpExpiresAt"
     );
     if (!user || !user.otpHash || !user.otpExpiresAt) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid or expired OTP" });
+      return next(APIError.badRequest("Invalid or expired OTP"));
     }
 
     if (user.otpExpiresAt < new Date()) {
-      return res
-        .status(400)
-        .json({ success: false, message: "OTP expired. Request a new one." });
+      return next(APIError.badRequest("OTP expired. Request a new one."));
     }
 
     const incomingHash = hashToken(otp);
     if (incomingHash !== user.otpHash) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid OTP" });
+      return next(APIError.badRequest("Invalid OTP"));
     }
 
     const resetToken = generateResetToken({ id: user._id, purpose: "reset" });
@@ -491,19 +428,13 @@ export const verifyOtp = async (req, res) => {
       data: { resetToken },
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "verifyOtp",
-      service: "auth",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- reset password ----------
 
-export const resetPassword = async (req, res) => {
+export const resetPassword = async (req, res, next) => {
   try {
     const { resetToken, newPassword } = req.validated;
 
@@ -511,24 +442,18 @@ export const resetPassword = async (req, res) => {
     try {
       decoded = verifyResetToken(resetToken);
     } catch (err) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid or expired reset token" });
+      return next(APIError.badRequest("Invalid or expired reset token"));
     }
 
     if (decoded.purpose !== "reset") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid reset token" });
+      return next(APIError.badRequest("Invalid reset token"));
     }
 
     const user = await User.findById(decoded.id).select(
       "+otpHash +otpExpiresAt +refreshTokens"
     );
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid reset token" });
+      return next(APIError.badRequest("Invalid reset token"));
     }
 
     user.password = newPassword;
@@ -549,12 +474,6 @@ export const resetPassword = async (req, res) => {
       message: "Password reset successful. Please log in.",
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "resetPassword",
-      service: "auth",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };

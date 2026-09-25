@@ -2,34 +2,18 @@ import Case from "../models/Case.js";
 import Photo from "../models/Photo.js";
 import logger from "../logger/index.js";
 import { deleteFromCloudinary } from "../utils/cloudinaryHelper.js";
-import { computeLocationRanking } from "../utils/ranking.js";
+import { APIError } from "../utils/APIError.js";
+import {
+  caseReporterSummary,
+  caseReporterView,
+} from "../utils/caseView.js";
 
-const summarizeCase = (c) => {   //Never send the raw DB document to the public. It may include reporter id, admin notes, and other internal fields.
-  const ranking = computeLocationRanking(c.clues || []);
-  return {
-    id: c._id,
-    fullName: c.fullName,
-    age: c.age,
-    gender: c.gender,
-    lastKnownLocation: c.lastKnownLocation,
-    dateLastSeen: c.dateLastSeen,
-    timeLastSeen: c.timeLastSeen,
-    status: c.status,
-    photograph: c.photograph?.url || null,
-    cluesCount: ranking.totalClues,
-    topLocation: ranking.topLocation,
-    createdAt: c.createdAt,
-    updatedAt: c.updatedAt,
-  };
-};
 // ---------- create case ----------
 
-export const createCase = async (req, res) => {
+export const createCase = async (req, res, next) => {
   try {
     if (!req.file) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Photograph is required" });
+      return next(APIError.badRequest("Photograph is required"));
     }
 
     const data = req.validated;
@@ -65,22 +49,16 @@ export const createCase = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Case submitted. Awaiting admin verification.",
-      data: summarizeCase(populated),
+      data: caseReporterSummary(populated),
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "createCase",
-      service: "case",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- list my cases ----------
 
-export const getMyCases = async (req, res) => {
+export const getMyCases = async (req, res, next) => {
   try {
     const cases = await Case.find({ reporterId: req.user._id })
       .populate("photograph")
@@ -89,92 +67,60 @@ export const getMyCases = async (req, res) => {
     return res.status(200).json({
       success: true,
       count: cases.length,
-      data: cases.map(summarizeCase),
+      data: cases.map(caseReporterSummary),
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "getMyCases",
-      service: "case",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- get one of my cases ----------
 
-export const getMyCaseById = async (req, res) => {
+export const getMyCaseById = async (req, res, next) => {
   try {
-    const c = await Case.findById(req.params.id)
-      .populate("photograph")
-      .populate("clues");
+    const c = await Case.findById(req.params.id).populate("photograph");
 
     if (!c) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Case not found" });
+      return next(APIError.notFound("Case not found"));
     }
 
     if (String(c.reporterId) !== String(req.user._id)) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not your case" });
+      return next(APIError.forbidden("Not your case"));
     }
 
-   return res.status(200).json({
-  success: true,
-  data: {
-    ...summarizeCase(c),
-    physicalDescription: c.physicalDescription,
-    clothingLastSeen: c.clothingLastSeen,
-    height: c.height,
-    additionalInfo: c.additionalInfo,
-    adminNote: c.adminNote,
-    clues: c.clues,
-    ranking: computeLocationRanking(c.clues || []).ranking,
-  },
-});
-  } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "getMyCaseById",
-      service: "case",
+    return res.status(200).json({
+      success: true,
+      data: caseReporterView(c),
     });
-    return res.status(500).json({ success: false, message: err.message });
+  } catch (err) {
+    return next(err);
   }
 };
 
 // ---------- update my case ----------
 
-export const updateMyCase = async (req, res) => {
+export const updateMyCase = async (req, res, next) => {
   try {
     const c = await Case.findById(req.params.id).populate("photograph");
+
     if (!c) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Case not found" });
+      return next(APIError.notFound("Case not found"));
     }
 
     if (String(c.reporterId) !== String(req.user._id)) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not your case" });
+      return next(APIError.forbidden("Not your case"));
     }
 
     if (c.status !== "Pending Verification") {
-      return res.status(400).json({
-        success: false,
-        message: "Case can only be edited while Pending Verification",
-      });
+      return next(
+        APIError.badRequest("Case can only be edited while Pending Verification")
+      );
     }
 
     const updates = req.validated || {};
     Object.assign(c, updates);
 
     if (req.file) {
-      // delete old photo from Cloudinary and Photo collection
       if (c.photograph) {
         await deleteFromCloudinary(c.photograph.publicId);
         await Photo.findByIdAndDelete(c.photograph._id);
@@ -198,41 +144,33 @@ export const updateMyCase = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Case updated",
-      data: summarizeCase(populated),
+      data: caseReporterSummary(populated),
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "updateMyCase",
-      service: "case",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- delete my case ----------
 
-export const deleteMyCase = async (req, res) => {
+export const deleteMyCase = async (req, res, next) => {
   try {
     const c = await Case.findById(req.params.id).populate("photograph");
+
     if (!c) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Case not found" });
+      return next(APIError.notFound("Case not found"));
     }
 
     if (String(c.reporterId) !== String(req.user._id)) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not your case" });
+      return next(APIError.forbidden("Not your case"));
     }
 
     if (!["Pending Verification", "Rejected"].includes(c.status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Only Pending Verification or Rejected cases can be deleted",
-      });
+      return next(
+        APIError.badRequest(
+          "Only Pending Verification or Rejected cases can be deleted"
+        )
+      );
     }
 
     if (c.photograph) {
@@ -247,19 +185,13 @@ export const deleteMyCase = async (req, res) => {
       message: "Case deleted",
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "deleteMyCase",
-      service: "case",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // ---------- reporter dashboard summary ----------
 
-export const getMyDashboardSummary = async (req, res) => {
+export const getMyDashboardSummary = async (req, res, next) => {
   try {
     const reporterId = req.user._id;
 
@@ -275,12 +207,6 @@ export const getMyDashboardSummary = async (req, res) => {
       data: { total, pending, active, found },
     });
   } catch (err) {
-    logger.error({
-      message: err.message,
-      stack: err.stack,
-      route: "getMyDashboardSummary",
-      service: "case",
-    });
-    return res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
