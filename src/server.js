@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 
 import { CONFIG, CORS_WHITELISTS } from "./config/index.js";
 import { connectDB } from "./config/db.js";      
@@ -11,8 +12,12 @@ import logger from "./logger/index.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(cookieParser());
 
 // CORS whitelist
 app.use(
@@ -39,8 +44,15 @@ app.use(
 app.use(helmet());
 app.use(morgan("dev"));
 
-app.get("/", (req, res) => {
-  res.json({ message: `${CONFIG.APP_NAME}_BE running` });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "API is running",
+    app: CONFIG.APP_NAME,
+    env: CONFIG.NODE_ENV,
+    time: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
 });
 
 app.use("/api", routes);

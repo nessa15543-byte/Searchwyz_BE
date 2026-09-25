@@ -1,0 +1,400 @@
+{
+  "info": {
+    "name": "Searchwyz_BE",
+    "description": "Complete API collection for Searchwyz_BE — Missing Person Search and Location Prioritization System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@test.com\",\n  \"phone\": \"08012345678\",\n  \"password\": \"secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.accessToken) pm.environment.set('accessToken', json.data.accessToken);",
+                  "  if (json.data && json.data.refreshToken) pm.environment.set('refreshToken', json.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@test.com\",\n  \"password\": \"secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.accessToken) pm.environment.set('accessToken', json.data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "Logout All",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout-all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout-all"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.devOtp) pm.environment.set('otp', json.devOtp);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.resetToken) pm.environment.set('resetToken', json.data.resetToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@test.com\",\n  \"otp\": \"{{otp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-otp"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resetToken\": \"{{resetToken}}\",\n  \"newPassword\": \"newsecret123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/user/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Create Case",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.id) pm.environment.set('caseId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "photograph", "type": "file", "src": [] },
+                { "key": "fullName", "type": "text", "value": "John Doe" },
+                { "key": "age", "type": "text", "value": "34" },
+                { "key": "gender", "type": "text", "value": "Male" },
+                { "key": "height", "type": "text", "value": "175cm" },
+                { "key": "physicalDescription", "type": "text", "value": "Tall, dark complexion, small scar on left cheek" },
+                { "key": "clothingLastSeen", "type": "text", "value": "Blue shirt and black trousers" },
+                { "key": "lastKnownLocation", "type": "text", "value": "Umuahia, Abia State" },
+                { "key": "dateLastSeen", "type": "text", "value": "2026-09-20" },
+                { "key": "timeLastSeen", "type": "text", "value": "14:30" },
+                { "key": "additionalInfo", "type": "text", "value": "Was last seen leaving the market" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/cases",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "cases"]
+            }
+          }
+        },
+        {
+          "name": "List My Cases",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/user/cases",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "cases"]
+            }
+          }
+        },
+        {
+          "name": "Get My Case",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/user/cases/{{caseId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "cases", "{{caseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update My Case",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "lastKnownLocation", "type": "text", "value": "Umuahia, Abia State (updated)" },
+                { "key": "additionalInfo", "type": "text", "value": "New information from a family friend" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/cases/{{caseId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "cases", "{{caseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete My Case",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/user/cases/{{caseId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "cases", "{{caseId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "Search Public Cases",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/public/cases",
+              "host": ["{{base_url}}"],
+              "path": ["api", "public", "cases"]
+            }
+          }
+        },
+        {
+          "name": "Public Case Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/public/cases/{{caseId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "public", "cases", "{{caseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Submit Clue",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": \"Akwa Ibom\",\n  \"date\": \"2026-09-20\",\n  \"time\": \"14:30\",\n  \"description\": \"Saw a man matching the description near the bus park\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/public/cases/{{caseId}}/clues",
+              "host": ["{{base_url}}"],
+              "path": ["api", "public", "cases", "{{caseId}}", "clues"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "dashboard"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "caseId", "value": "", "type": "string" },
+    { "key": "otp", "value": "", "type": "string" },
+    { "key": "resetToken", "value": "", "type": "string" }
+  ]
+}
