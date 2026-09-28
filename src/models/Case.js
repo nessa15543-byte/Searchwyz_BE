@@ -1,34 +1,12 @@
 import mongoose from "mongoose";
 
-const clueSchema = new mongoose.Schema(
+export const clueSchema = new mongoose.Schema(
   {
-    location: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    date: {
-      type: String,
-      required: true,
-    },
-    time: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    status: {
-      type: String,
-      enum: ["Pending", "Verified", "Rejected", "Requires Review"],
-      default: "Pending",
-    },
-    submittedAt: {
-      type: Date,
-      default: Date.now,
-    },
+    location: { type: String, required: true, trim: true },
+    date: { type: String, required: true },
+    time: { type: String, required: true },
+    description: { type: String, required: true, trim: true },
+    submittedAt: { type: Date, default: Date.now },
   },
   { _id: true }
 );
@@ -58,7 +36,7 @@ const caseSchema = new mongoose.Schema(
       default: null,
     },
 
-    reporterId: { 
+    reporterId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
