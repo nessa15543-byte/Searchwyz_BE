@@ -46,12 +46,12 @@ app.get("/", (_req, res) => {
 app.use("/api", routes);
 
 // 404 — needs next even if unused, Express expects 3 args only if you want it
-app.use((_req, res) => {
+app.use((_req, res, _next) => {
   res.status(404).json({ success: false, message: "Route not found" });
 });
 
 // global error handler — must have 4 args
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   if (err.type === "entity.parse.failed") {
     return res
       .status(400)

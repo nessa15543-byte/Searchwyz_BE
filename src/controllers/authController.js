@@ -425,6 +425,7 @@ import {
 } from "../utils/generateToken.js";
 import { sendOtpEmail } from "../utils/sendEmail.js";
 import { CONFIG } from "../config/index.js";
+import { token } from "morgan";
 
 // ---------- helpers ----------
 
@@ -515,6 +516,7 @@ export const login = async (req, res) => {
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
           role: "admin",
+          dashboardRoute: "/admin/dashboard",
         },
       });
     }
@@ -558,6 +560,7 @@ export const login = async (req, res) => {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         role: "user",
+        dashboardRoute: "/user/dashboard",
       },
     });
   } catch (err) {
@@ -701,6 +704,7 @@ export const logout = async (req, res) => {
     entity.refreshTokens = entity.refreshTokens.filter(
       (rt) => rt.tokenHash !== incomingHash
     );
+    res.clearCookie(hashToken)
     await entity.save();
 
     return res
