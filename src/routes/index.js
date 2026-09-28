@@ -6,8 +6,15 @@ import publicRoutes from "./publicRoutes.js";
 
 const router = express.Router();
 
+
+
+
+
 // Public — no auth
 router.use("/public", publicRoutes);
+
+
+
 
 // Auth — register, login, refresh, me, logout, forgot-password
 router.use("/auth", authRoutes);
