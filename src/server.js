@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-
+import cookieParser from "cookie-parser";
+import { APIError } from "./utils/APIError.js";
 import { CONFIG, CORS_WHITELISTS } from "./config/index.js";
 import { connectDB } from "./config/db.js";      
 import { verifyEmailConnection } from "./config/email.js";
@@ -11,8 +12,12 @@ import logger from "./logger/index.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(cookieParser());
 
 // CORS whitelist
 app.use(
@@ -39,18 +44,20 @@ app.use(
 app.use(helmet());
 app.use(morgan("dev"));
 
-app.get("/", (req, res) => {
-  res.json({ message: `${CONFIG.APP_NAME}_BE running` });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "API is running",
+    app: CONFIG.APP_NAME,
+    env: CONFIG.NODE_ENV,
+    time: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
 });
 
 app.use("/api", routes);
 
 // 404 — needs next even if unused, Express expects 3 args only if you want it
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: "Route not found" });
-});
-
-// global error handler — must have 4 args
 app.use((err, req, res, next) => {
   if (err.type === "entity.parse.failed") {
     return res
@@ -64,10 +71,24 @@ app.use((err, req, res, next) => {
       .json({ success: false, message: "Origin not allowed" });
   }
 
+  if (err instanceof APIError) {
+    logger.warn({
+      message: err.message,
+      code: err.code,
+      route: req.originalUrl,
+      method: req.method,
+    });
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+      code: err.code,
+    });
+  }
+
   logger.error({
     message: err.message,
     stack: err.stack,
-    path: req.originalUrl,
+    route: req.originalUrl,
     method: req.method,
     service: "global-error",
   });

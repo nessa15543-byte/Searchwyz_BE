@@ -13,22 +13,10 @@ const photoSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    url: {
-      type: String,
-      required: true,
-    },
-    publicId: {
-      type: String,
-      required: true,
-    },
-    format: {
-      type: String,
-      default: null,
-    },
-    bytes: {
-      type: Number,
-      default: null,
-    },
+    url: { type: String, required: true },
+    publicId: { type: String, required: true },
+    format: { type: String, default: null },
+    bytes: { type: Number, default: null },
   },
   { timestamps: true }
 );
