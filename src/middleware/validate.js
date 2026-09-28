@@ -1,3 +1,5 @@
+import { APIError } from "../utils/APIError.js";
+
 export const validate = (schema) => (req, res, next) => {
   try {
     const parsed = schema.parse({
@@ -9,15 +11,12 @@ export const validate = (schema) => (req, res, next) => {
     return next();
   } catch (err) {
     if (err.issues) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: err.issues.map((e) => ({
-          path: e.path.join("."),
-          message: e.message,
-        })),
-      });
+      return next(
+        APIError.badRequest(
+          err.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ")
+        )
+      );
     }
-    return res.status(400).json({ success: false, message: "Bad request" });
+    return next(APIError.badRequest("Bad request"));
   }
 };

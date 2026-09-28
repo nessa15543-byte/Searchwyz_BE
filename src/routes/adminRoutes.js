@@ -31,11 +31,11 @@ router.get("/clues", allClues);
 router.get("/clues/pending", getPendingClues);
 router.patch("/clues/status", updateClueStatus);
 
-router.get("/users/registered",getRegisteredUsers);
-router.patch("/users/:id/restrict", restrictUserAcct);
+router.get("/user/registered",getRegisteredUsers);
+router.patch("/user/:id/restrict", restrictUserAcct);
 
 router.post("/cases/:id/info-request", requestReporterAdditionalInfo);
 // router.put("/system/settings", updateSystemSetting);
-router.delete("/users/:id", deleteUserAcct);
+router.delete("/user/:id", deleteUserAcct);
 
 export default router;
