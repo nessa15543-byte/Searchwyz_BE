@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { CONFIG } from "../config/index.js";
 
+// refactor this code i don't see the need of these
 export const generateAccessToken = (payload) =>
   jwt.sign(payload, CONFIG.ACCESS_TOKEN_SECRET, {
     expiresIn: CONFIG.ACCESS_TOKEN_EXPIRES_IN,

@@ -1,0 +1,37 @@
+info:
+  name: Verify OTP
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: "{{base_url}}/api/auth/verify-otp"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "email": "john@test.com",
+        "otp": "{{otp}}"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "if (res.getStatus() === 200) {\r
+
+        \  const json = res.getBody();\r
+
+        \  if (json.data && json.data.resetToken) bru.setEnvVar('resetToken', json.data.resetToken);\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

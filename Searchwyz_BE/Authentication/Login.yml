@@ -1,0 +1,39 @@
+info:
+  name: Login
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/api/auth/login"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "email": "john@test.com",
+        "password": "secret123"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "if (res.getStatus() === 200) {\r
+
+        \  const json = res.getBody();\r
+
+        \  if (json.data && json.data.accessToken) bru.setEnvVar('accessToken', json.data.accessToken);\r
+
+        \  if (json.data && json.data.refreshToken) bru.setEnvVar('refreshToken', json.data.refreshToken);\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

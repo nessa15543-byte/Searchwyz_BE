@@ -1,0 +1,28 @@
+info:
+  name: Update My Case
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{base_url}}/api/user/cases/{{caseId}}"
+  headers:
+    - name: Authorization
+      value: Bearer {{accessToken}}
+  body:
+    type: multipart-form
+    data:
+      - name: lastKnownLocation
+        type: text
+        value: Umuahia, Abia State (updated)
+      - name: additionalInfo
+        type: text
+        value: New information from a family friend
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

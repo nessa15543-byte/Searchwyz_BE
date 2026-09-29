@@ -17,33 +17,22 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(cookieParser());
-
 // CORS whitelist
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // allow tools like Bruno/Postman (   no origin header)
-      if (!origin) return callback(null, true);
-
-      if (CORS_WHITELISTS.includes(origin)) {
-        return callback(null, true);
+    origin: function (origin, cb) {
+      logger.info({ origin, whitelists: CORS_WHITELISTS }, "Cors Info");
+      logger.info({...CORS_WHITELISTS }, "Cors Info");
+      if (!origin || CORS_WHITELISTS.includes(origin)) {
+        return cb(null, true);
       }
-
-      logger.warn({
-        message: `CORS blocked: ${origin}`,
-        service: "cors",
-      });
-
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
+      return cb(new Error("Not allowed by CORS"));
     },
+    methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
     credentials: true,
   })
 );
-
-app.use(helmet());
-app.use(morgan("dev"));
-
+app.use(expressWinston.logger(logger));
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -98,11 +87,10 @@ app.use((err, req, res, next) => {
 
 const start = async () => {
   await connectDB();
-  await verifyEmailConnection();
 
   app.listen(CONFIG.PORT, () => {
     logger.info({
-      message: `${CONFIG.APP_NAME}_BE running on port ${CONFIG.PORT}`,
+      message: `${CONFIG.APP_NAME}_BE running on port http://localhost:${CONFIG.PORT}`,
       service: "server",
     });
   });

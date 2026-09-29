@@ -3,11 +3,9 @@ import { devLogger } from "./dev.logger.js";
 import { proLogger } from "./production.logger.js";
 
 let logger = null;
+ 
 
-const isDev =
-  CONFIG.NODE_ENV === "development" || CONFIG.NODE_ENV === "dev";
-
-if (isDev) {
+if ( CONFIG.NODE_ENV === "development" || CONFIG.NODE_ENV === "dev") {
   logger = devLogger();
 } else {
   logger = proLogger();

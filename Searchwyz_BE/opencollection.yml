@@ -1,0 +1,29 @@
+opencollection: 1.0.0
+
+info:
+  name: Searchwyz_BE
+
+request:
+  variables:
+    - name: base_url
+      value: http://localhost:5000
+    - name: accessToken
+      value: ""
+    - name: refreshToken
+      value: ""
+    - name: caseId
+      value: ""
+    - name: otp
+      value: ""
+    - name: resetToken
+      value: ""
+
+docs:
+  content: Complete API collection for Searchwyz_BE — Missing Person Search and Location Prioritization System
+  type: text/markdown
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

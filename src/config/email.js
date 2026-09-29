@@ -42,11 +42,4 @@ export const transporter = nodemailer.createTransport({
 //   debug: true,                  // ✅ show SMTP traffic
 });
 
-export const verifyEmailConnection = async () => {
-  try {
-    await transporter.verify();
-    console.log(" Email transporter ready");
-  } catch (err) {
-    console.error("Email transporter failed:", err.message);
-  }
-};
+ 

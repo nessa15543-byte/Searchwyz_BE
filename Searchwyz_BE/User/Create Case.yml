@@ -1,0 +1,66 @@
+info:
+  name: Create Case
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/api/user/cases"
+  headers:
+    - name: Authorization
+      value: Bearer {{accessToken}}
+  body:
+    type: multipart-form
+    data:
+      - name: photograph
+        type: file
+        value: []
+      - name: fullName
+        type: text
+        value: John Doe
+      - name: age
+        type: text
+        value: "34"
+      - name: gender
+        type: text
+        value: Male
+      - name: height
+        type: text
+        value: 175cm
+      - name: physicalDescription
+        type: text
+        value: Tall, dark complexion, small scar on left cheek
+      - name: clothingLastSeen
+        type: text
+        value: Blue shirt and black trousers
+      - name: lastKnownLocation
+        type: text
+        value: Umuahia, Abia State
+      - name: dateLastSeen
+        type: text
+        value: 2026-09-20
+      - name: timeLastSeen
+        type: text
+        value: 14:30
+      - name: additionalInfo
+        type: text
+        value: Was last seen leaving the market
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "if (res.getStatus() === 201) {\r
+
+        \  const json = res.getBody();\r
+
+        \  if (json.data && json.data.id) bru.setEnvVar('caseId', json.data.id);\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

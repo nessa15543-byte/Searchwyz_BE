@@ -1,0 +1,16 @@
+info:
+  name: Public Case Details
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{base_url}}/api/public/cases/{{caseId}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

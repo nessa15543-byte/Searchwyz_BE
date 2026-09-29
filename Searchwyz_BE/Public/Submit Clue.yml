@@ -1,0 +1,28 @@
+info:
+  name: Submit Clue
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{base_url}}/api/public/cases/{{caseId}}/clues"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "location": "Akwa Ibom",
+        "date": "2026-09-20",
+        "time": "14:30",
+        "description": "Saw a man matching the description near the bus park"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

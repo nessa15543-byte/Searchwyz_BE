@@ -21,11 +21,12 @@ const buildAuthPayload = (entity, role) => {
   return { accessToken, refreshToken, role };
 };
 
+// what is does doing?
 const cookieOptions = (maxAgeMinutes) => ({
   httpOnly: true,
   secure: CONFIG.NODE_ENV === "production",
   sameSite: "lax",
-  path: "/",
+  path: "/", 
   maxAge: maxAgeMinutes * 60 * 1000,
 });
 
@@ -102,7 +103,7 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.validated;
+    const { email, password } = req.validated; // what is this>
 
     // check admin first
     const admin = await Admin.findOne({ email }).select(
