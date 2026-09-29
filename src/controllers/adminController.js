@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Case from "../models/Case.js";
+import Case, { clueSchema } from "../models/Case.js";
 import User from "../models/User.js";
 // import Settings from "../models/Setting.js";
 
@@ -128,7 +128,7 @@ export const deleteCase = async (req, res, next) => {
         if (!post) {
             return res.status(404).json({ message: "Post record not found" });
         }
-        await clue.deleteMany({ caseId: req.params.id });
+        await clueSchema.deleteMany({ caseId: req.params.id });
         res.status(200).json({ success: true, message: "Case deleted permanently" });
     } catch (error) {
         next(error);
@@ -153,37 +153,39 @@ export const requestReporterAdditionalInfo = async (req, res, next) => {
 };
 //-----------------delete user account permanently--------------
 export const deleteUserAcct = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // const session = await mongoose.startSession();
+    // session.startTransaction();
 
     try {
         const userId = req.params.id;
 
-        if (req.user.id === req.params.id) {
+        if (req.admin.id === req.params.id) {
             return res.status(400).json({ message: "Self-deletion via dashboard is forbidden. Contact database administrator." });
         }
 
-        const user = await User.findByIdAndDelete(userId).session(session);
+        const user = await User.findByIdAndDelete(userId);
+        // .session(session)
         if (!user) {
-            await session.abortTransaction();
-            session.endSession();
+            // await session.abortTransaction();
+            // session.endSession();
             return res.status(404).json({ message: "User account not found" });
         }
-        await Case.deleteMany({ author: userId }).session(session);
-        await session.commitTransaction();
-        session.endSession();
+        await Case.deleteMany({ author: userId });
+        // .session(session)
+        // await session.commitTransaction();
+        // session.endSession();
 
         res.status(200).json({ success: true, message: "User and all associated content dropped successfully" });
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
+        // await session.abortTransaction();
+        // session.endSession();
         next(error);
     }
 };
 //------------------clues--------------------
 export const allClues = async (_req, res, next) => {
     try{
-        const all = await clue.find({}).select("-passwords");
+        const all = await clueSchema.find({}).select("-passwords");
         if(!all) {
             return res.status(404).json({ message: "No clue records found"});
         }

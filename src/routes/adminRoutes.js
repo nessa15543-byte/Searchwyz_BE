@@ -8,34 +8,34 @@ const router = express.Router();
 // All admin routes: must be logged in AND admin/investigator.
 router.use(protect, adminOnly);
 
-router.get("/dashboard", (req, res) => {
-  res.json({
-    success: true,
-    message: "Admin dashboard",
-    data: { adminId: req.admin._id, role: req.role },
-  });
-});
+// router.get("/dashboard",(req, res) => {
+//   res.json({
+//     success: true,
+//     message: "Admin dashboard",
+//     data: { adminId: req.admin._id, role: req.role },
+//   });
+// });
 
-router.get("/dashboard/totals",getDashboardTotal);
+router.get("/dashboard",getDashboardTotal);
 router.get("/cases/:id/locations",getCaseLocationStats);
 
 router.get("/cases/pending", getPendingCases);
 router.patch("/cases/:id/status", updateCaseStatus);
 
-router.patch("/cases/:id/approve", approveCase);
-router.patch("/cases/:id/reject", rejectCase);
-router.patch("/cases/:id/pending", pendingCase);
-router.patch("/cases/:id/delete", deleteCase);
+router.patch("/cases/approve/:id", approveCase);
+router.patch("/cases/reject/:id", rejectCase);
+router.patch("/cases/pending/:id", pendingCase);
+router.patch("/cases/delete/:id", deleteCase);
 
 router.get("/clues", allClues);
 router.get("/clues/pending", getPendingClues);
 router.patch("/clues/status", updateClueStatus);
 
-router.get("/user/registered",getRegisteredUsers);
-router.patch("/user/:id/restrict", restrictUserAcct);
+router.get("/registered",getRegisteredUsers);
+router.patch("/restrict/:id", restrictUserAcct);
 
-router.post("/cases/:id/info-request", requestReporterAdditionalInfo);
+router.post("/cases/info-request/:id", requestReporterAdditionalInfo);
 // router.put("/system/settings", updateSystemSetting);
-router.delete("/user/:id", deleteUserAcct);
+router.delete("/delete/:id", deleteUserAcct);
 
 export default router;
