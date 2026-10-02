@@ -298,15 +298,11 @@ export const logout = async (req, res, next) => {
       .findById(req.user?._id || req.admin?._id)
       .select("+refreshTokens");
 
-    if (entity) {
-      const incomingHash = hashToken(refreshToken);
-      entity.refreshTokens = entity.refreshTokens.filter(
-        (rt) => rt.tokenHash !== incomingHash
-      );
-      await entity.save();
-    }
-
-    clearAuthCookies(res);
+    const incomingHash = hashToken(refreshToken);
+    entity.refreshTokens = entity.refreshTokens.filter(
+      (rt) => rt.tokenHash !== incomingHash
+    );
+    await entity.save();
 
     return res
       .status(200)
