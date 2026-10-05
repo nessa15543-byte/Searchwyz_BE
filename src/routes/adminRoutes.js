@@ -16,11 +16,11 @@ router.use(protect, adminOnly);
 //   });
 // });
 
-router.get("/dashboard",getDashboardTotal);
-router.get("/cases/:id/locations",getCaseLocationStats);
+router.get("/dashboard-total",getDashboardTotal);
+router.get("/cases/location/:id",getCaseLocationStats);
 
 router.get("/cases/pending", getPendingCases);
-router.patch("/cases/:id/status", updateCaseStatus);
+router.patch("/cases/status/:id", updateCaseStatus);
 
 router.patch("/cases/approve/:id", approveCase);
 router.patch("/cases/reject/:id", rejectCase);

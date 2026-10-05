@@ -32,7 +32,7 @@ const cookieOptions = (maxAgeMinutes) => ({
 const setAuthCookies = (res, accessToken, refreshToken) => {
   const accessMinutes =
     Number(String(CONFIG.ACCESS_TOKEN_EXPIRES_IN).replace("m", "")) || 2;
-  const refreshMinutes = Number(CONFIG.REFRESH_TOKEN_EXPIRES_MINUTES) || 3;
+  const refreshMinutes = Number(CONFIG.REFRESH_TOKEN_EXPIRES_MINUTES) || 2;
 
   res.cookie("accessToken", accessToken, cookieOptions(accessMinutes));
   res.cookie("refreshToken", refreshToken, cookieOptions(refreshMinutes));
