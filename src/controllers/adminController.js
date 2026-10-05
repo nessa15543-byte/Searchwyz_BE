@@ -66,7 +66,7 @@ export const updateCaseStatus = async (req, res, next) => {
         const updatedStatus = await Case.findByIdAndUpdate(
             req.params.id,
             { status, updatedAt: Date.now() },
-            { new: true }
+            // { new: true }
         );
         if (!updatedStatus) {
             return res.status(404).json({ message: "Case profile not found" });
@@ -81,7 +81,7 @@ export const approveCase = async (req, res, next) => {
     try {
         const post = await Case.findByIdAndUpdate(
             req.params.id,
-            { status: "approved", updatedAt: Date.now() },
+            { status: "Active", updatedAt: Date.now() },
             { new: true, runValidators: true }
         );
         if (!post) {
@@ -96,7 +96,7 @@ export const rejectCase = async (req, res, next) => {
     try {
         const post = await Case.findByIdAndUpdate(
             req.params.id,
-            { status: "rejected", updatedAt: Date.now() },
+            { status: "Rejected", updatedAt: Date.now() },
             { new: true, runValidators: true }
         );
         if (!post) {
@@ -185,7 +185,7 @@ export const deleteUserAcct = async (req, res, next) => {
 //------------------clues--------------------
 export const allClues = async (_req, res, next) => {
     try{
-        const all = await clueSchema.find({}).select("-passwords");
+        const all = await Case.find({}).select("clues");
         if(!all) {
             return res.status(404).json({ message: "No clue records found"});
         }
@@ -196,7 +196,10 @@ export const allClues = async (_req, res, next) => {
 };
 export const getPendingClues = async (_req, res, next) => {
     try {
-        const clues = await Case.find({ status: "Pending Verification" }).populate("caseId", "title");
+        const clues = await Case.find({ status: "Active"}).select("clues");
+        if(!clues) {
+            return res.status(404).json({message:"Clues unavailable at the moment"});
+        }
         res.status(200).json(clues);
     } catch (error) {
         next(error);
@@ -205,11 +208,12 @@ export const getPendingClues = async (_req, res, next) => {
 export const updateClueStatus = async (req, res, next) => {
     try {
         const { status } = req.body;
-        if (!['verified', 'rejected', 'require review'].includes(status)) return res.status(400).json({ message: "Invalid state." });
+        if (!['Verified', 'Rejected', 'Require review'].includes(status)) return res.status(400).json({ message: "Invalid state." });
 
-        const updatedClue = await Case.findByIdAndUpdate(
+        const updatedClue = await Case.findOneAndUpdate(
             req.params.id,
-            { status }, { new: true }
+            { status }, 
+            { new: true }
         );
         if (!updatedClue) {
             return res.status(404).json({ message: "Clue entry not found." });
