@@ -20,8 +20,9 @@ export const getDashboardTotal = async (_req, res, next) => {
 export const getCaseLocationStats = async (req, res, next) => {
     try {
         const locationStats = await Case.aggregate([
-            { $match: { caseId: new mongoose.Types.ObjectId(req.params.id) } },
-            { $group: { _id: "location", count: { sum: 1 } } }
+            { $match: { _Id: new mongoose.Types.ObjectId(req.params.id) } },
+            { $unwind: "$clues"},
+            { $group: { _id: "clues.location", count: { $sum: 1 } } }
         ]);
         res.status(200).json({ caseId: req.params.id, rankings: locationStats });
     } catch (error) {

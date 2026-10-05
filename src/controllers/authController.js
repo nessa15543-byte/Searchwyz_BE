@@ -13,6 +13,10 @@ import { sendOtpEmail } from "../utils/sendEmail.js";
 import { CONFIG } from "../config/index.js";
 import { APIError } from "../utils/APIError.js";
 
+// ---------- constants ----------
+
+const RESET_COOKIE_NAME = "resetToken";
+
 // ---------- helpers ----------
 
 const buildAuthPayload = (entity, role) => {
@@ -41,6 +45,15 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
 const clearAuthCookies = (res) => {
   res.clearCookie("accessToken", { path: "/" });
   res.clearCookie("refreshToken", { path: "/" });
+};
+
+const setResetCookie = (res, token) => {
+  const resetMinutes = Number(CONFIG.RESET_TOKEN_EXPIRES_MINUTES) || 10;
+  res.cookie(RESET_COOKIE_NAME, token, cookieOptions(resetMinutes));
+};
+
+const clearResetCookie = (res) => {
+  res.clearCookie(RESET_COOKIE_NAME, { path: "/" });
 };
 
 const saveRefreshToken = async (entity, refreshToken, req) => {
@@ -417,11 +430,11 @@ export const verifyOtp = async (req, res, next) => {
     }
 
     const resetToken = generateResetToken({ id: user._id, purpose: "reset" });
+    setResetCookie(res, resetToken);
 
     return res.status(200).json({
       success: true,
-      message: "OTP verified",
-      data: { resetToken },
+      message: "OTP verified. You can now reset your password.",
     });
   } catch (err) {
     return next(err);
@@ -432,16 +445,25 @@ export const verifyOtp = async (req, res, next) => {
 
 export const resetPassword = async (req, res, next) => {
   try {
-    const { resetToken, newPassword } = req.validated;
+    const { newPassword } = req.validated;
+    const resetToken = req.cookies?.[RESET_COOKIE_NAME];
+
+    if (!resetToken) {
+      return next(
+        APIError.unauthorized("Reset session missing or expired. Verify OTP again.")
+      );
+    }
 
     let decoded;
     try {
       decoded = verifyResetToken(resetToken);
     } catch (err) {
+      clearResetCookie(res);
       return next(APIError.badRequest("Invalid or expired reset token"));
     }
 
     if (decoded.purpose !== "reset") {
+      clearResetCookie(res);
       return next(APIError.badRequest("Invalid reset token"));
     }
 
@@ -449,6 +471,7 @@ export const resetPassword = async (req, res, next) => {
       "+otpHash +otpExpiresAt +refreshTokens"
     );
     if (!user) {
+      clearResetCookie(res);
       return next(APIError.badRequest("Invalid reset token"));
     }
 
@@ -458,6 +481,8 @@ export const resetPassword = async (req, res, next) => {
     user.otpLastSentAt = null;
     user.refreshTokens = [];
     await user.save();
+
+    clearResetCookie(res);
 
     logger.info({
       message: `Password reset for ${user.email}`,

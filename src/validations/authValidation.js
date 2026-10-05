@@ -30,6 +30,6 @@ export const logoutSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  resetToken: z.string().min(10, "Reset token required"),
+   
   newPassword: z.string().min(6, "Password must be at least 6 characters"),
 });
